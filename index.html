@@ -31,8 +31,8 @@
             position: fixed;
             bottom: 10px;
             right: 10px;
-            font-size: 0.6em;
-            color: rgba(255,215,0,0.3);
+            font-size: 0.9em;
+            color: rgba(255,215,0,0.4);
             font-weight: normal;
         }
 
@@ -233,17 +233,17 @@
         let serialDioData = [46, 97, 131, 299, 321, 429, 630, 909, 1160, 1747, 1980, 2162, 2298, 2409, 2477, 2605, 2622, 2646, 2819, 2862, 2961, 3282, 3283, 3310, 3397, 3411, 3452, 3475, 3548];
         let ainzData = [4, 9, 19];
 
-        // Load saved data from persistent storage or use defaults
-        async function loadData() {
+        // Load saved data from localStorage or use defaults
+        function loadData() {
             try {
-                const savedSerialDio = await window.storage.get('serialDioData', false);
-                const savedAinz = await window.storage.get('ainzData', false);
+                const savedSerialDio = localStorage.getItem('serialDioData');
+                const savedAinz = localStorage.getItem('ainzData');
                 
-                if (savedSerialDio && savedSerialDio.value) {
-                    serialDioData = JSON.parse(savedSerialDio.value);
+                if (savedSerialDio) {
+                    serialDioData = JSON.parse(savedSerialDio);
                 }
-                if (savedAinz && savedAinz.value) {
-                    ainzData = JSON.parse(savedAinz.value);
+                if (savedAinz) {
+                    ainzData = JSON.parse(savedAinz);
                 }
             } catch (error) {
                 console.log('No saved data found, using defaults');
@@ -254,11 +254,11 @@
             renderNumbers(ainzData, 'ainzNumbers', 'ainzCount', 'ainz');
         }
 
-        // Save data to persistent storage (client-side only)
-        async function saveData() {
+        // Save data to localStorage (works on GitHub Pages)
+        function saveData() {
             try {
-                await window.storage.set('serialDioData', JSON.stringify(serialDioData), false);
-                await window.storage.set('ainzData', JSON.stringify(ainzData), false);
+                localStorage.setItem('serialDioData', JSON.stringify(serialDioData));
+                localStorage.setItem('ainzData', JSON.stringify(ainzData));
             } catch (error) {
                 console.error('Error saving data:', error);
             }
