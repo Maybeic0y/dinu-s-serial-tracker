@@ -24,6 +24,16 @@
             font-size: 2.5em;
             margin-bottom: 40px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .watermark {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.6em;
+            color: rgba(255,215,0,0.3);
+            font-weight: normal;
         }
 
         .collection-container {
@@ -173,22 +183,24 @@
 </head>
 <body>
     <h1>Collected Serial Dios</h1>
-
+    
+    <div class="watermark">ic4y</div>
+    
     <div class="collection-container">
         <!-- Serial Dio Section -->
         <div class="character-section">
             <div class="character-header">
                 <h2 class="character-title">Serial Dio</h2>
             </div>
-
+            
             <div class="numbers-grid" id="serialDioNumbers"></div>
-
+            
             <button class="toggle-add-btn" onclick="toggleAddSection('serialDio')">
                 <span id="serialDioToggleIcon">👁️</span> Toggle Add Section
             </button>
-
+            
             <div class="count-info" id="serialDioCount"></div>
-
+            
             <div class="add-section" id="serialDioAddSection">
                 <input type="text" class="add-input" id="serialDioInput" placeholder="Add new serial number (e.g., 3600)">
                 <button class="add-button" onclick="addSerialDio()">Add</button>
@@ -200,15 +212,15 @@
             <div class="character-header">
                 <h2 class="character-title">Serial Ainz</h2>
             </div>
-
+            
             <div class="numbers-grid" id="ainzNumbers"></div>
-
+            
             <button class="toggle-add-btn" onclick="toggleAddSection('ainz')">
                 <span id="ainzToggleIcon">👁️</span> Toggle Add Section
             </button>
-
+            
             <div class="count-info" id="ainzCount"></div>
-
+            
             <div class="add-section" id="ainzAddSection">
                 <input type="text" class="add-input" id="ainzInput" placeholder="Add new serial number (e.g., 25)">
                 <button class="add-button" onclick="addAinz()">Add</button>
@@ -221,26 +233,35 @@
         let serialDioData = [46, 97, 131, 299, 321, 429, 630, 909, 1160, 1747, 1980, 2162, 2298, 2409, 2477, 2605, 2622, 2646, 2819, 2862, 2961, 3282, 3283, 3310, 3397, 3411, 3452, 3475, 3548];
         let ainzData = [4, 9, 19];
 
-        // Load saved data from memory or use defaults
-        function loadData() {
-            const savedSerialDio = window.collectionData?.serialDio;
-            const savedAinz = window.collectionData?.ainz;
-
-            if (savedSerialDio) {
-                serialDioData = savedSerialDio;
+        // Load saved data from persistent storage or use defaults
+        async function loadData() {
+            try {
+                const savedSerialDio = await window.storage.get('serialDioData', false);
+                const savedAinz = await window.storage.get('ainzData', false);
+                
+                if (savedSerialDio && savedSerialDio.value) {
+                    serialDioData = JSON.parse(savedSerialDio.value);
+                }
+                if (savedAinz && savedAinz.value) {
+                    ainzData = JSON.parse(savedAinz.value);
+                }
+            } catch (error) {
+                console.log('No saved data found, using defaults');
             }
-            if (savedAinz) {
-                ainzData = savedAinz;
-            }
+            
+            // Render the data after loading
+            renderNumbers(serialDioData, 'serialDioNumbers', 'serialDioCount', 'serialDio');
+            renderNumbers(ainzData, 'ainzNumbers', 'ainzCount', 'ainz');
         }
 
-        // Save data to memory
-        function saveData() {
-            if (!window.collectionData) {
-                window.collectionData = {};
+        // Save data to persistent storage (client-side only)
+        async function saveData() {
+            try {
+                await window.storage.set('serialDioData', JSON.stringify(serialDioData), false);
+                await window.storage.set('ainzData', JSON.stringify(ainzData), false);
+            } catch (error) {
+                console.error('Error saving data:', error);
             }
-            window.collectionData.serialDio = [...serialDioData];
-            window.collectionData.ainz = [...ainzData];
         }
 
         // Load data on startup
@@ -253,22 +274,22 @@
         function renderNumbers(data, containerId, countId, prefix) {
             const container = document.getElementById(containerId);
             const sortedData = [...data].sort((a, b) => a - b);
-
+            
             container.innerHTML = '';
             sortedData.forEach((num, index) => {
                 const badge = document.createElement('div');
                 badge.className = 'number-badge';
-
+                
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.className = 'number-input';
                 input.value = `#${num}`;
-
+                
                 // Handle editing
                 input.addEventListener('focus', function() {
                     this.value = num.toString();
                 });
-
+                
                 input.addEventListener('blur', function() {
                     const newValue = parseInt(this.value);
                     if (!isNaN(newValue) && newValue > 0) {
@@ -285,17 +306,17 @@
                         this.value = `#${num}`;
                     }
                 });
-
+                
                 input.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         this.blur();
                     }
                 });
-
+                
                 badge.appendChild(input);
                 container.appendChild(badge);
             });
-
+            
             document.getElementById(countId).textContent = `Total: ${sortedData.length} collected`;
         }
 
@@ -338,7 +359,7 @@
         function toggleAddSection(type) {
             const section = document.getElementById(type + 'AddSection');
             const icon = document.getElementById(type + 'ToggleIcon');
-
+            
             if (section.classList.contains('hidden')) {
                 section.classList.remove('hidden');
                 icon.textContent = '👁️';
@@ -352,7 +373,7 @@
             const input = document.getElementById('serialDioInput');
             const value = input.value.trim().replace('#', '');
             const num = parseInt(value);
-
+            
             if (!isNaN(num) && num > 0 && !serialDioData.includes(num)) {
                 serialDioData.push(num);
                 saveData();
@@ -369,7 +390,7 @@
             const input = document.getElementById('ainzInput');
             const value = input.value.trim().replace('#', '');
             const num = parseInt(value);
-
+            
             if (!isNaN(num) && num > 0 && !ainzData.includes(num)) {
                 ainzData.push(num);
                 saveData();
@@ -390,10 +411,6 @@
         document.getElementById('ainzInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') addAinz();
         });
-
-        // Initial render
-        renderNumbers(serialDioData, 'serialDioNumbers', 'serialDioCount', 'Serial Dio');
-        renderNumbers(ainzData, 'ainzNumbers', 'ainzCount', 'Ainz');
     </script>
 </body>
 </html>
